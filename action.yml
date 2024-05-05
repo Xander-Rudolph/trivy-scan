@@ -24,11 +24,11 @@ inputs:
   gh_pages_branch:
     description: "Branch name for github pages results (leave blank to disable)"
     required: false
-    default: "gh_pages"
+    default: ""
   gh_pages_results:
     description: "Path for result files to process"
     required: false
-    default: ""
+    default: "results"
 
 runs:
   using: composite

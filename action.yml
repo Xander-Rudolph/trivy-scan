@@ -39,7 +39,8 @@ runs:
         trivy fs ${{ inputs.debug_output }} --format ${{ inputs.format }} --output "./${{ inputs.working_dir}}-fs-report.${{ inputs.format }}" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
         
     - name: Consolidate Reports
-      if: ${{ inputs.format == "md" }}
+      shell: bash
+      if: ${{ inputs.format == 'md' }}
       run: |
         echo "# CI Code Scan Report" > reports/summary.md
         echo "## Trivy Security Scan - config" >> reports/summary.md

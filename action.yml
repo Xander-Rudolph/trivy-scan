@@ -31,8 +31,8 @@ runs:
       shell: bash
       id: scan
       run: | 
-        trivy config ${{ inputs.debug_output }} --format template --template '@.github/templates/trivy.md' --output "./${{ inputs.working_dir}}-trivy-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-        trivy fs ${{ inputs.debug_output }} --format template --template '@.github/templates/trivy.md' --output "./${{ inputs.working_dir}}-fs-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy config ${{ inputs.debug_output }} --format table --output "./${{ inputs.working_dir}}-trivy-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy fs ${{ inputs.debug_output }} --format table --output "./${{ inputs.working_dir}}-fs-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
         
     - name: Consolidate Reports
       shell: bash

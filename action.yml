@@ -1,4 +1,4 @@
-name: 'Run Trivy IaC scan'
+name: 'Run Trivy scan - linux - with summary'
 author: 'xander-rudolph'
 branding:
   icon: 'git-pull-request'
@@ -49,72 +49,12 @@ runs:
       run: | 
         trivy config ${{ inputs.debug_output }} --format ${{ inputs.format }} --output "./${{ inputs.working_dir}}-trivy-report.${{ inputs.format }}" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
         trivy fs ${{ inputs.debug_output }} --format ${{ inputs.format }} --output "./${{ inputs.working_dir}}-fs-report.${{ inputs.format }}" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-
-    - name: Parse Trivy scan on ${{ inputs.working_dir }}
-      shell: bash
-      id: parse
-      continue-on-error: true
-      run: | 
-        errors=$(jq -r '.runs[].results[] | select(.level == "error")' "./${{ inputs.working_dir}}-trivy-report.${{ inputs.format }}")
-        echo "The following errors were found:\n\t$errors"
-        echo "results=$errors" >> $GITHUB_OUTPUT
-
-    - name: Update PR
-      uses: actions/github-script@v6
-      if: github.event_name == 'pull_request'
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const output = `#### Trivy scan: ⚙️\`${{ steps.scan.outcome }}\`
-          <details><summary>show console out</summary>
-
-          \`\`\`\n
-          ${{ steps.scan.stdout }}
-          \`\`\`
-
-          </details>
-
-          <details><summary>Errors</summary>
-
-          \`\`\`\n
-          ${{ steps.parse.outputs.results }}
-          \`\`\`
-
-          </details>
-
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ inputs.working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
-
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
-          
-    - name: Upload Trivy scan to artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ inputs.working_dir}} Trivy Results
-        path: |
-          ${{ inputs.working_dir}}-trivy-report.${{ inputs.format }}
-          ${{ inputs.working_dir}}-fs-report.${{ inputs.format }}
-          
-    - name: Get Pages source
-      if: ${{ inputs.gh_pages_branch != '' }}
-      uses: actions/checkout@v4
-      with:
-        path: ${{ inputs.gh_pages_results }}
-        ref: ${{ inputs.gh_pages_branch }}
-
-    - name: Update Pages sarif
-      if: ${{ inputs.gh_pages_branch != '' }}
-      shell: bash
+        
+    - name: Consolidate Reports
       run: |
-          cp ./${{ inputs.working_dir}}-trivy-report.${{ inputs.format }} ${{ inputs.gh_pages_results }}/${{ inputs.working_dir}}-trivy-report.${{ inputs.format }}
-          cp ./${{ inputs.working_dir}}-fs-report.${{ inputs.format }} ${{ inputs.gh_pages_results }}/${{ inputs.working_dir}}-fs-report.${{ inputs.format }}
-          cd ${{ inputs.gh_pages_results }}
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add .
-          git commit -m "Sarifs updated"
-          git push
+        echo "# CI Code Scan Report" > reports/summary.md
+        echo "## Trivy Security Scan - config" >> reports/summary.md
+        cat ${{ inputs.working_dir}}-trivy-report.${{ inputs.format }} >> reports/summary.md
+        echo "## Trivy Security Scan - fs" >> reports/summary.md
+        cat ${{ inputs.working_dir}}-fs-report.${{ inputs.format }} >> reports/summary.md
+        cat reports/summary.md >> $GITHUB_STEP_SUMMARY

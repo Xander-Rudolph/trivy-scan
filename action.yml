@@ -53,8 +53,9 @@ runs:
           
           jq -r '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | "| \(.PkgName) | \(.VulnerabilityID) | \(.Severity) | \(.Description) |"' "$input_file" >> "$output_file"
         }      
-        echo "# CI Code Scan Report" > reportssummary.md
-        echo "## Trivy Security Scan - ${{ inputs.type }}" >> reportssummary.md
+        echo "# Trivy Security Scan - ${{ inputs.type }}" >> reportssummary.md
+        echo "<details>" >> reportssummary.md
         convert_to_md "${{ inputs.working_dir }}-${{ inputs.type }}.json" "${{ inputs.working_dir }}-${{ inputs.type }}-report.md"
         cat "${{ inputs.working_dir }}-${{ inputs.type }}-report.md" >> reportssummary.md
-        cat reportssummary.md >> $GITHUB_STEP_SUMMARY
+        echo "</details>" >> reportssummary.md
+        cat"${{ inputs.working_dir }}-${{ inputs.type }}-report.md" >> $GITHUB_STEP_SUMMARY

@@ -13,10 +13,6 @@ inputs:
     description: "Severity to flag on"
     required: false
     default: HIGH,CRITICAL
-  format:
-    description: "Scan format"
-    required: false
-    default: github
 
 runs:
   using: composite
@@ -35,8 +31,8 @@ runs:
       shell: bash
       id: scan
       run: | 
-        trivy config ${{ inputs.debug_output }} --format ${{ inputs.format }} --output "./${{ inputs.working_dir}}-trivy-report.${{ inputs.format }}" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-        trivy fs ${{ inputs.debug_output }} --format ${{ inputs.format }} --output "./${{ inputs.working_dir}}-fs-report.${{ inputs.format }}" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy config ${{ inputs.debug_output }} --format template --template '@.github/templates/trivy.md' --output "./${{ inputs.working_dir}}-trivy-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy fs ${{ inputs.debug_output }} --format template --template '@.github/templates/trivy.md' --output "./${{ inputs.working_dir}}-fs-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
         
     - name: Consolidate Reports
       shell: bash
@@ -44,7 +40,7 @@ runs:
       run: |
         echo "# CI Code Scan Report" > reportssummary.md
         echo "## Trivy Security Scan - config" >> reportssummary.md
-        cat ${{ inputs.working_dir}}-trivy-report.${{ inputs.format }} >> reportssummary.md
+        cat ${{ inputs.working_dir}}-trivy-report.md} >> reportssummary.md
         echo "## Trivy Security Scan - fs" >> reportssummary.md
-        cat ${{ inputs.working_dir}}-fs-report.${{ inputs.format }} >> reportssummary.md
+        cat ${{ inputs.working_dir}}-fs-report.md >> reportssummary.md
         cat reportssummary.md >> $GITHUB_STEP_SUMMARY

@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run Trivy Scan
-        uses: Xander-Rudolph/trivy-scan@latest
+        uses: Xander-Rudolph/trivy-scan@main
         with:
           working_dir: "./path/to/scan"
           severity: "HIGH,CRITICAL"

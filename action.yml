@@ -16,7 +16,7 @@ inputs:
   format:
     description: "Scan format"
     required: false
-    default: md
+    default: github
 
 runs:
   using: composite
@@ -40,7 +40,7 @@ runs:
         
     - name: Consolidate Reports
       shell: bash
-      if: ${{ inputs.format == 'md' }}
+      if: ${{ inputs.format == 'github' }}
       run: |
         echo "# CI Code Scan Report" > reports/summary.md
         echo "## Trivy Security Scan - config" >> reports/summary.md

@@ -32,19 +32,29 @@ runs:
       shell: bash
       id: scan
       run: | 
-        trivy fs ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format table --output "./${{ inputs.working_dir}}-fs-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-        trivy repo ${{ inputs.debug_output }} --format table --output "./${{ inputs.working_dir}}-repo-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy fs ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-fs.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy repo ${{ inputs.debug_output }} --format json --output "./${{ inputs.working_dir}}-repo.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
 
     - name: Consolidate Reports
       shell: bash
       run: |
+        # Function to convert Trivy JSON output to Markdown
+        convert_to_md() {
+          local input_file=$1
+          local output_file=$2
+          
+          echo "### Vulnerabilities Detected" > "$output_file"
+          echo "" >> "$output_file"
+          echo "| Package | Vulnerability ID | Severity | Description |" >> "$output_file"
+          echo "|---------|-----------------|-----------|-------------|" >> "$output_file"
+          
+          jq -r '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | "| \(.PkgName) | \(.VulnerabilityID) | \(.Severity) | \(.Description) |"' "$input_file" >> "$output_file"
+        }      
         echo "# CI Code Scan Report" > reportssummary.md
-        if [[ -s "${{ inputs.working_dir }}-fs-report.md" ]]; then
-          echo "## Trivy Security Scan - fs" >> reportssummary.md
-          cat "${{ inputs.working_dir }}-fs-report.md" >> reportssummary.md
-        fi
-        if [[ -s "${{ inputs.working_dir }}-repo-report.md" ]]; then
-          echo "## Trivy Security Scan - repo" >> reportssummary.md
-          cat "${{ inputs.working_dir }}-repo-report.md" >> reportssummary.md
-        fi
+        echo "## Trivy Security Scan - fs" >> reportssummary.md
+        convert_to_md "${{ inputs.working_dir }}-fs.json" "${{ inputs.working_dir }}-fs-report.md"
+        cat "${{ inputs.working_dir }}-fs-report.md" >> reportssummary.md
+        echo "## Trivy Security Scan - repo" >> reportssummary.md
+        convert_to_md "${{ inputs.working_dir }}-repo.json" "${{ inputs.working_dir }}-repo-report.md"
+        cat "${{ inputs.working_dir }}-repo-report.md" >> reportssummary.md
         cat reportssummary.md >> $GITHUB_STEP_SUMMARY

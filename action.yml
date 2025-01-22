@@ -42,9 +42,9 @@ runs:
       shell: bash
       if: ${{ inputs.format == 'github' }}
       run: |
-        echo "# CI Code Scan Report" > reports/summary.md
-        echo "## Trivy Security Scan - config" >> reports/summary.md
-        cat ${{ inputs.working_dir}}-trivy-report.${{ inputs.format }} >> reports/summary.md
-        echo "## Trivy Security Scan - fs" >> reports/summary.md
-        cat ${{ inputs.working_dir}}-fs-report.${{ inputs.format }} >> reports/summary.md
+        echo "# CI Code Scan Report" > reportssummary.md
+        echo "## Trivy Security Scan - config" >> reportssummary.md
+        cat ${{ inputs.working_dir}}-trivy-report.${{ inputs.format }} >> reportssummary.md
+        echo "## Trivy Security Scan - fs" >> reportssummary.md
+        cat ${{ inputs.working_dir}}-fs-report.${{ inputs.format }} >> reportssummary.md
         cat reports/summary.md >> $GITHUB_STEP_SUMMARY

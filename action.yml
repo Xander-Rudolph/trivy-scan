@@ -47,4 +47,4 @@ runs:
         cat ${{ inputs.working_dir}}-trivy-report.${{ inputs.format }} >> reportssummary.md
         echo "## Trivy Security Scan - fs" >> reportssummary.md
         cat ${{ inputs.working_dir}}-fs-report.${{ inputs.format }} >> reportssummary.md
-        cat reports/summary.md >> $GITHUB_STEP_SUMMARY
+        cat reportssummary.md >> $GITHUB_STEP_SUMMARY

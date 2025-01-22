@@ -32,8 +32,8 @@ runs:
       shell: bash
       id: scan
       run: | 
-        trivy fs ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-fs-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-        trivy repo ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-repo-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy fs ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format table --output "./${{ inputs.working_dir}}-fs-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy repo ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format table --output "./${{ inputs.working_dir}}-repo-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
 
     - name: Consolidate Reports
       shell: bash

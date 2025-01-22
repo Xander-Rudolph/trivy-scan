@@ -36,7 +36,6 @@ runs:
         
     - name: Consolidate Reports
       shell: bash
-      if: ${{ inputs.format == 'github' }}
       run: |
         echo "# CI Code Scan Report" > reportssummary.md
         echo "## Trivy Security Scan - config" >> reportssummary.md

@@ -1,4 +1,4 @@
-name: 'Run Trivy IaC scan'
+name: 'Run Trivy scan - linux - with summary'
 author: 'xander-rudolph'
 branding:
   icon: 'git-pull-request'
@@ -12,27 +12,16 @@ inputs:
   severity:
     description: "Severity to flag on"
     required: false
-    default: HIGH,CRITICAL
-  format:
-    description: "Scan format"
+    default: LOW,MEDIUM,HIGH,CRITICAL
+  type:
+    description: "Type of scan to run"
     required: false
-    default: sarif
-  debug_output:
-    description: "Enable debug flag (set to '-d' to enable)"
-    required: false
-    default: ""
-  gh_pages_branch:
-    description: "Branch name for github pages results (leave blank to disable)"
-    required: false
-    default: ""
-  gh_pages_results:
-    description: "Path for result files to process"
-    required: false
-    default: "results"
+    default: fs
 
 runs:
   using: composite
   steps:
+    # https://trivy.dev/v0.18.3/installation/
     - name: Install Trivy
       shell: bash
       run: |
@@ -47,74 +36,25 @@ runs:
       shell: bash
       id: scan
       run: | 
-        trivy config ${{ inputs.debug_output }} --format ${{ inputs.format }} --output "./${{ inputs.working_dir}}-trivy-report.${{ inputs.format }}" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-        trivy fs ${{ inputs.debug_output }} --format ${{ inputs.format }} --output "./${{ inputs.working_dir}}-fs-report.${{ inputs.format }}" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy ${{ inputs.type }} ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-${{ inputs.type }}.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
 
-    - name: Parse Trivy scan on ${{ inputs.working_dir }}
-      shell: bash
-      id: parse
-      continue-on-error: true
-      run: | 
-        errors=$(jq -r '.runs[].results[] | select(.level == "error")' "./${{ inputs.working_dir}}-trivy-report.${{ inputs.format }}")
-        echo "The following errors were found:\n\t$errors"
-        echo "results=$errors" >> $GITHUB_OUTPUT
-
-    - name: Update PR
-      uses: actions/github-script@v6
-      if: github.event_name == 'pull_request'
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const output = `#### Trivy scan: ⚙️\`${{ steps.scan.outcome }}\`
-          <details><summary>show console out</summary>
-
-          \`\`\`\n
-          ${{ steps.scan.stdout }}
-          \`\`\`
-
-          </details>
-
-          <details><summary>Errors</summary>
-
-          \`\`\`\n
-          ${{ steps.parse.outputs.results }}
-          \`\`\`
-
-          </details>
-
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ inputs.working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
-
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
-          
-    - name: Upload Trivy scan to artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ inputs.working_dir}} Trivy Results
-        path: |
-          ${{ inputs.working_dir}}-trivy-report.${{ inputs.format }}
-          ${{ inputs.working_dir}}-fs-report.${{ inputs.format }}
-          
-    - name: Get Pages source
-      if: ${{ inputs.gh_pages_branch != '' }}
-      uses: actions/checkout@v4
-      with:
-        path: ${{ inputs.gh_pages_results }}
-        ref: ${{ inputs.gh_pages_branch }}
-
-    - name: Update Pages sarif
-      if: ${{ inputs.gh_pages_branch != '' }}
+    - name: Consolidate Report
       shell: bash
       run: |
-          cp ./${{ inputs.working_dir}}-trivy-report.${{ inputs.format }} ${{ inputs.gh_pages_results }}/${{ inputs.working_dir}}-trivy-report.${{ inputs.format }}
-          cp ./${{ inputs.working_dir}}-fs-report.${{ inputs.format }} ${{ inputs.gh_pages_results }}/${{ inputs.working_dir}}-fs-report.${{ inputs.format }}
-          cd ${{ inputs.gh_pages_results }}
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add .
-          git commit -m "Sarifs updated"
-          git push
+        # Function to convert Trivy JSON output to Markdown
+        convert_to_md() {
+          local input_file=$1
+          local output_file=$2
+          
+          echo "### Vulnerabilities Detected" > "$output_file"
+          echo "" >> "$output_file"
+          echo "| Package | Vulnerability ID | Severity | Description |" >> "$output_file"
+          echo "|---------|-----------------|-----------|-------------|" >> "$output_file"
+          
+          jq -r '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | "| \(.PkgName) | \(.VulnerabilityID) | \(.Severity) | \(.Description) |"' "$input_file" >> "$output_file"
+        }      
+        echo "# CI Code Scan Report" > reportssummary.md
+        echo "## Trivy Security Scan - ${{ inputs.type }}" >> reportssummary.md
+        convert_to_md "${{ inputs.working_dir }}-${{ inputs.type }}.json" "${{ inputs.working_dir }}-${{ inputs.type }}-report.md"
+        cat "${{ inputs.working_dir }}-${{ inputs.type }}-report.md" >> reportssummary.md
+        cat reportssummary.md >> $GITHUB_STEP_SUMMARY

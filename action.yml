@@ -3,7 +3,7 @@ author: 'xander-rudolph'
 branding:
   icon: 'git-pull-request'
   color: 'green'
-description: 'Checks a directory for any IaC vulnerabilities'
+description: 'Checks a directory for any vulnerabilities and adds a step summary'
 inputs:
   working_dir:
     description: "Working path for scan"

@@ -17,18 +17,6 @@ inputs:
     description: "Scan format"
     required: false
     default: md
-  debug_output:
-    description: "Enable debug flag (set to '-d' to enable)"
-    required: false
-    default: ""
-  gh_pages_branch:
-    description: "Branch name for github pages results (leave blank to disable)"
-    required: false
-    default: ""
-  gh_pages_results:
-    description: "Path for result files to process"
-    required: false
-    default: "results"
 
 runs:
   using: composite
@@ -51,6 +39,7 @@ runs:
         trivy fs ${{ inputs.debug_output }} --format ${{ inputs.format }} --output "./${{ inputs.working_dir}}-fs-report.${{ inputs.format }}" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
         
     - name: Consolidate Reports
+      if: ${{ inputs.format == "md" }}
       run: |
         echo "# CI Code Scan Report" > reports/summary.md
         echo "## Trivy Security Scan - config" >> reports/summary.md

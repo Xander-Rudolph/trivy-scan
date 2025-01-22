@@ -13,6 +13,10 @@ inputs:
     description: "Severity to flag on"
     required: false
     default: LOW,MEDIUM,HIGH,CRITICAL
+  type:
+    description: "Type of scan to run"
+    required: false
+    default: fs
 
 runs:
   using: composite
@@ -32,10 +36,9 @@ runs:
       shell: bash
       id: scan
       run: | 
-        trivy fs ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-fs.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-        trivy repo ${{ inputs.debug_output }} --format json --output "./${{ inputs.working_dir}}-repo.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy ${{ inputs.type }} ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-${{ inputs.type }}.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
 
-    - name: Consolidate Reports
+    - name: Consolidate Report
       shell: bash
       run: |
         # Function to convert Trivy JSON output to Markdown
@@ -51,10 +54,7 @@ runs:
           jq -r '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | "| \(.PkgName) | \(.VulnerabilityID) | \(.Severity) | \(.Description) |"' "$input_file" >> "$output_file"
         }      
         echo "# CI Code Scan Report" > reportssummary.md
-        echo "## Trivy Security Scan - fs" >> reportssummary.md
-        convert_to_md "${{ inputs.working_dir }}-fs.json" "${{ inputs.working_dir }}-fs-report.md"
-        cat "${{ inputs.working_dir }}-fs-report.md" >> reportssummary.md
-        echo "## Trivy Security Scan - repo" >> reportssummary.md
-        convert_to_md "${{ inputs.working_dir }}-repo.json" "${{ inputs.working_dir }}-repo-report.md"
-        cat "${{ inputs.working_dir }}-repo-report.md" >> reportssummary.md
+        echo "## Trivy Security Scan - ${{ inputs.type }}" >> reportssummary.md
+        convert_to_md "${{ inputs.working_dir }}-${{ inputs.type }}.json" "${{ inputs.working_dir }}-${{ inputs.type }}-report.md"
+        cat "${{ inputs.working_dir }}-${{ inputs.type }}-report.md" >> reportssummary.md
         cat reportssummary.md >> $GITHUB_STEP_SUMMARY

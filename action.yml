@@ -32,17 +32,13 @@ runs:
       shell: bash
       id: scan
       run: | 
-        trivy config ${{ inputs.debug_output }} --format table --output "./${{ inputs.working_dir}}-trivy-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-        trivy fs ${{ inputs.debug_output }} --format table --output "./${{ inputs.working_dir}}-fs-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy fs ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format table --output "./${{ inputs.working_dir}}-fs-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
         trivy repo ${{ inputs.debug_output }} --format table --output "./${{ inputs.working_dir}}-repo-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-      #TODO: https://trivy.dev/v0.58/docs/scanner/license/#standard-scanning
-      # --scanners license
+
     - name: Consolidate Reports
       shell: bash
       run: |
         echo "# CI Code Scan Report" > reportssummary.md
-        echo "## Trivy Security Scan - config" >> reportssummary.md
-        cat ${{ inputs.working_dir}}-trivy-report.md >> reportssummary.md
         echo "## Trivy Security Scan - fs" >> reportssummary.md
         cat ${{ inputs.working_dir}}-fs-report.md >> reportssummary.md
         echo "## Trivy Security Scan - repo" >> reportssummary.md

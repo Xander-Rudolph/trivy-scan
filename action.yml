@@ -17,6 +17,7 @@ inputs:
 runs:
   using: composite
   steps:
+    # https://trivy.dev/v0.18.3/installation/
     - name: Install Trivy
       shell: bash
       run: |
@@ -33,7 +34,9 @@ runs:
       run: | 
         trivy config ${{ inputs.debug_output }} --format table --output "./${{ inputs.working_dir}}-trivy-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
         trivy fs ${{ inputs.debug_output }} --format table --output "./${{ inputs.working_dir}}-fs-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-        
+        trivy repo ${{ inputs.debug_output }} --format table --output "./${{ inputs.working_dir}}-repo-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+      #TODO: https://trivy.dev/v0.58/docs/scanner/license/#standard-scanning
+      # --scanners license
     - name: Consolidate Reports
       shell: bash
       run: |
@@ -42,4 +45,6 @@ runs:
         cat ${{ inputs.working_dir}}-trivy-report.md >> reportssummary.md
         echo "## Trivy Security Scan - fs" >> reportssummary.md
         cat ${{ inputs.working_dir}}-fs-report.md >> reportssummary.md
+        echo "## Trivy Security Scan - repo" >> reportssummary.md
+        cat ${{ inputs.working_dir}}-repo-report.md >> reportssummary.md
         cat reportssummary.md >> $GITHUB_STEP_SUMMARY

@@ -16,7 +16,7 @@ inputs:
   format:
     description: "Scan format"
     required: false
-    default: sarif
+    default: md
   debug_output:
     description: "Enable debug flag (set to '-d' to enable)"
     required: false

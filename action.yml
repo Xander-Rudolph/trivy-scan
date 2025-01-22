@@ -12,11 +12,12 @@ inputs:
   severity:
     description: "Severity to flag on"
     required: false
-    default: HIGH,CRITICAL
+    default: LOW,MEDIUM,HIGH,CRITICAL
 
 runs:
   using: composite
   steps:
+    # https://trivy.dev/v0.18.3/installation/
     - name: Install Trivy
       shell: bash
       run: |
@@ -31,39 +32,19 @@ runs:
       shell: bash
       id: scan
       run: | 
-        trivy fs --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-fs-report.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-        trivy repo --format json --output "./${{ inputs.working_dir}}-repo-report.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy fs ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-fs-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy repo ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-repo-report.md" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
 
-    - name: Convert Trivy JSON reports to Markdown
+    - name: Consolidate Reports
       shell: bash
       run: |
         echo "# CI Code Scan Report" > reportssummary.md
-        echo "## Trivy Security Scan - fs" >> reportssummary.md
-        jq -r '
-          .Results[] | 
-          "### Vulnerabilities in \(.Target)\n" + 
-          (
-            if .Vulnerabilities then 
-              (.Vulnerabilities[] | "- **\(.Severity)** \(.Title) (\(.VulnerabilityID))") 
-            else 
-              "*No vulnerabilities found*" 
-            end
-          )
-        ' "./${{ inputs.working_dir}}-fs-report.json" >> reportssummary.md
-        echo "## Trivy Security Scan - repo" >> reportssummary.md
-        jq -r '
-          .Results[] | 
-          "### Vulnerabilities in \(.Target)\n" + 
-          (
-            if .Vulnerabilities then 
-              (.Vulnerabilities[] | "- **\(.Severity)** \(.Title) (\(.VulnerabilityID))") 
-            else 
-              "*No vulnerabilities found*" 
-            end
-          )
-        ' "./${{ inputs.working_dir}}-repo-report.json" >> reportssummary.md
-
-    - name: Append Markdown summary to $GITHUB_STEP_SUMMARY
-      shell: bash
-      run: |
+        if [[ -s "${{ inputs.working_dir }}-fs-report.md" ]]; then
+          echo "## Trivy Security Scan - fs" >> reportssummary.md
+          cat "${{ inputs.working_dir }}-fs-report.md" >> reportssummary.md
+        fi
+        if [[ -s "${{ inputs.working_dir }}-repo-report.md" ]]; then
+          echo "## Trivy Security Scan - repo" >> reportssummary.md
+          cat "${{ inputs.working_dir }}-repo-report.md" >> reportssummary.md
+        fi
         cat reportssummary.md >> $GITHUB_STEP_SUMMARY

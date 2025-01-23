@@ -37,12 +37,6 @@ runs:
       id: scan
       run: | 
         trivy ${{ inputs.type }} ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "${{ inputs.working_dir}}-${{ inputs.type }}.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
-        
-    - name: DEBUG
-      shell: pwsh
-      run: | 
-        $outputFile = Get-Item "${{ inputs.working_dir}}-${{ inputs.type }}.json"
-        Write-Warning "Content:`n$(Get-Content $outputFile)"
 
     - name: Consolidate Report
       shell: pwsh
@@ -108,5 +102,9 @@ runs:
             }
             return "$markdownHeader`n$markdown"
         }
-        $content = Get-Content "${{ inputs.working_dir}}-${{ inputs.type }}.json" | ConvertTo-Markdown
-        echo $content >> $env:GITHUB_STEP_SUMMARY
+        $outputFile = Get-Item "${{ inputs.working_dir}}-${{ inputs.type }}.json"
+        $content = Get-Content "$outputFile" | ConvertTo-Markdown
+        Write-Warning "Content:`n$($content)"
+        $mdcontent = $content | ConvertTo-Markdown
+        Write-Warning "Content:`n$($mdcontent)"
+        echo $mdcontent >> $env:GITHUB_STEP_SUMMARY

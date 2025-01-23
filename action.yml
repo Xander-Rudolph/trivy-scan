@@ -36,7 +36,7 @@ runs:
       shell: bash
       id: scan
       run: | 
-        trivy ${{ inputs.type }} ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-${{ inputs.type }}.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        trivy ${{ inputs.type }} ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "${{ inputs.working_dir}}-${{ inputs.type }}.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
 
     - name: Consolidate Report
       shell: pwsh
@@ -102,4 +102,4 @@ runs:
             }
             return "$markdownHeader`n$markdown"
         }
-        (Get-Content "./${{ inputs.working_dir}}-${{ inputs.type }}.json"  | ConvertTo-Markdown)  >> $env:GITHUB_STEP_SUMMARY
+        (Get-Content "${{ inputs.working_dir}}-${{ inputs.type }}.json"  | ConvertTo-Markdown)  >> $env:GITHUB_STEP_SUMMARY

@@ -40,7 +40,6 @@ runs:
         
     - name: DEBUG
       shell: pwsh
-      id: scan
       run: | 
         $outputFile = Get-Item "${{ inputs.working_dir}}-${{ inputs.type }}.json"
         Write-Warning "Content:`n$(Get-Content $outputFile)"

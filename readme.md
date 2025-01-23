@@ -33,17 +33,16 @@ on:
 
 jobs:
   trivy-scan:
+    name: Trivy Scan Analysis
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
+        with:
+          
       - name: Run Trivy Scan
         uses: Xander-Rudolph/trivy-scan@main
         with:
-          working_dir: "./path/to/scan"
           severity: "HIGH,CRITICAL"
-          type: "fs"
 ```
 
 ## Installation & Setup

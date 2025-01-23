@@ -1,4 +1,4 @@
-name: 'Run Trivy scan - linux - with summary'
+vname: 'Run Trivy scan - linux - with summary'
 author: 'xander-rudolph'
 branding:
   icon: 'git-pull-request'
@@ -98,4 +98,4 @@ runs:
             return "$markdownHeader`n$markdown"
         }
         (Get-Content "./${{ inputs.working_dir}}-${{ inputs.type }}.json"  | ConvertTo-Markdown)  >> reportssummary.md
-        cat reportssummary.md >> $GITHUB_STEP_SUMMARY
+        cat reportssummary.md >> $env:GITHUB_STEP_SUMMARY

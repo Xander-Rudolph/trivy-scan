@@ -103,7 +103,7 @@ runs:
             return "$markdownHeader`n$markdown"
         }
         $outputFile = Get-Item "${{ inputs.working_dir}}-${{ inputs.type }}.json"
-        $content = Get-Content "$outputFile" | ConvertTo-Markdown
+        $content = Get-Content "$outputFile"
         Write-Warning "Content:`n$($content)"
         $mdcontent = $content | ConvertTo-Markdown
         Write-Warning "Content:`n$($mdcontent)"

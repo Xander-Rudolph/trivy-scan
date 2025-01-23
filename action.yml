@@ -59,7 +59,8 @@ runs:
                 $type = $item.Type
                 $secrets = $item.Secrets
                 $vulnerabilities = $item | Select-Object -ExpandProperty Vulnerabilities -ErrorAction SilentlyContinue
-        
+                Write-Warning "Variables are:`ntarget = $target`nclass = $class`ntype = $type`nsecrets = $secrets`nvulnerabilities=$vulnerabilities"
+                
                 if($secrets){
                     If($secrets.Count -eq 0){continue}
                     $markdown += "## Secrets`n<details><summary>Click to expand</summary>`n`n"

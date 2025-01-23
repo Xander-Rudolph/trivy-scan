@@ -39,23 +39,63 @@ runs:
         trivy ${{ inputs.type }} ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "./${{ inputs.working_dir}}-${{ inputs.type }}.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
 
     - name: Consolidate Report
-      shell: bash
+      shell: pwsh
       run: |
-        # Function to convert Trivy JSON output to Markdown
-        convert_to_md() {
-          local input_file=$1
-          local output_file=$2
-          
-          echo "### Vulnerabilities Detected" > "$output_file"
-          echo "" >> "$output_file"
-          echo "| Package | Vulnerability ID | Severity | Description |" >> "$output_file"
-          echo "|---------|-----------------|-----------|-------------|" >> "$output_file"
-          
-          jq -r '.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[] | "| \(.PkgName) | \(.VulnerabilityID) | \(.Severity) | \(.Description) |"' "$input_file" >> "$output_file"
-        }      
-        echo "# Trivy Security Scan - ${{ inputs.type }}" >> reportssummary.md
-        echo "<details>" >> reportssummary.md
-        convert_to_md "${{ inputs.working_dir }}-${{ inputs.type }}.json" "${{ inputs.working_dir }}-${{ inputs.type }}-report.md"
-        cat "${{ inputs.working_dir }}-${{ inputs.type }}-report.md" >> reportssummary.md
-        echo "</details>" >> reportssummary.md
-        cat"${{ inputs.working_dir }}-${{ inputs.type }}-report.md" >> $GITHUB_STEP_SUMMARY
+        function ConvertTo-Markdown {
+            param(
+                [Parameter(ValueFromPipeline)]
+                $InputObject
+            )
+            
+            $markdownHeader = @"
+        # Trivy Summary`n
+        "@
+            $markdown = @"
+        "@
+            ForEach($item in $InputObject.Results)
+            {
+                $target = $item.Target
+                $class = $item.Class
+                $type = $item.Type
+                $secrets = $item.Secrets
+                $vulnerabilities = $item | Select-Object -ExpandProperty Vulnerabilities -ErrorAction SilentlyContinue
+        
+                if($secrets){
+                    If($secrets.Count -eq 0){continue}
+                    $markdown += "## Secrets`n<details><summary>Click to expand</summary>`n`n"
+                    $markdown += "| Rule | File | Start Line | End Line | Severity | Class | Title | Category |`n"
+                    $markdown += "|-|-|-|-|-|-|-|-|`n"
+                    
+                    foreach ($secret in $secrets) {
+                        $line = "| $($secret.RuleID) | $target | $($secret.StartLine) | $($secret.EndLine) | $($secret.Severity) | $class | $($secret.Title) | $($secret.Category) |"
+                        $markdown += "$line`n"
+                    }
+                    $markdown += "`n</detail>`n"
+                }
+                Else{
+                    If($vulnerabilities.Count -eq 0){continue}
+                    $markdown += "## Vulnerabilites - $target - $class`n<details><summary>Click to expand</summary>`n`n"
+                    $markdown += ""
+                    $markdown += "| Item | Type | Current Version | Fixed Version | Severity | CVE ID | Title | Description |`n"
+                    $markdown += "|-|-|-|-|-|-|-|-|`n"
+                    
+                    foreach ($vuln in $vulnerabilities) {
+                        # this is needed to not break the MD format in case html format is in the desc
+                        $description = ($vuln.Description -replace '<details>' `
+                                                   -replace '<summary>', '' `
+                                                   -replace '</summary>', '' `
+                                                   -replace '</details>', '' `
+                                                   -replace '&nbsp;', ' ' `
+                                                   -replace '<br\s*/?>', "").trim()
+        
+                        $line = "| $($vuln.PkgName) | $type | $($vuln.InstalledVersion) | $($vuln.FixedVersion) | $($vuln.Severity) | [$($vuln.VulnerabilityID)]($($vuln.PrimaryURL)) | $($vuln.Title) | <details><summary>Click to expand</summary>$description<br>Additional References:$($vuln.References -join "<br>")</details>|"
+                        $markdown += "$line`n"
+                    }
+                    $markdown += "`n</detail>`n"
+                }
+            }
+            If (-not $markdown){ return "$markdownHeader`nNo Issues Found"}
+            return "$markdownHeader`n$markdown"
+        }
+        (Get-Content "${{ inputs.working_dir }}-${{ inputs.type }}.json" | ConvertTo-Markdown)  >> reportssummary.md
+        cat "${{ inputs.working_dir }}-${{ inputs.type }}-report.md" >> $GITHUB_STEP_SUMMARY

@@ -37,7 +37,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
           
       - name: Run Trivy Scan
         uses: Xander-Rudolph/trivy-scan@main

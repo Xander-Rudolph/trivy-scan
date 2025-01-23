@@ -52,6 +52,7 @@ runs:
         "@
             $markdown = @"
         "@
+            Write-Warning "InputObject is:`n$InputObject"
             ForEach($item in $InputObject.Results)
             {
                 $target = $item.Target

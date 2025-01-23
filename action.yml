@@ -52,7 +52,6 @@ runs:
         "@
             $markdown = @"
         "@
-            Write-Warning "InputObject is:`n$InputObject"
             ForEach($item in $InputObject.Results)
             {
                 $target = $item.Target
@@ -60,7 +59,6 @@ runs:
                 $type = $item.Type
                 $secrets = $item.Secrets
                 $vulnerabilities = $item | Select-Object -ExpandProperty Vulnerabilities -ErrorAction SilentlyContinue
-                Write-Warning "Variables are:`ntarget = $target`nclass = $class`ntype = $type`nsecrets = $secrets`nvulnerabilities=$vulnerabilities"
                 
                 if($secrets){
                     If($secrets.Count -eq 0){continue}
@@ -97,14 +95,11 @@ runs:
                 }
             }
             If (-not $markdown){ 
-              Write-Warning "MARKDOWN STRING IS:`n$markdown"
               return "$markdownHeader`nNo Issues Found"
             }
             return "$markdownHeader`n$markdown"
         }
         $outputFile = Get-Item "${{ inputs.working_dir}}-${{ inputs.type }}.json"
         $content = Get-Content $outputFile | convertfrom-json -depth 20
-        Write-Warning "Content:`n$($content)"
         $mdcontent = ConvertTo-Markdown -InputObject $content
-        Write-Warning "Content:`n$($mdcontent)"
         echo $mdcontent >> $env:GITHUB_STEP_SUMMARY

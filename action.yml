@@ -37,6 +37,13 @@ runs:
       id: scan
       run: | 
         trivy ${{ inputs.type }} ${{ inputs.debug_output }} --scanners vuln,misconfig,secret,license --format json --output "${{ inputs.working_dir}}-${{ inputs.type }}.json" --severity ${{ inputs.severity}} ${{ inputs.working_dir}}
+        
+    - name: DEBUG
+      shell: pwsh
+      id: scan
+      run: | 
+        $outputFile = Get-Item "${{ inputs.working_dir}}-${{ inputs.type }}.json"
+        Write-Warning "Content:`n$(Get-Content $outputFile)"
 
     - name: Consolidate Report
       shell: pwsh

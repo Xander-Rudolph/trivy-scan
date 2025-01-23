@@ -94,8 +94,10 @@ runs:
                     $markdown += "`n</detail>`n"
                 }
             }
-            If (-not $markdown){ return "$markdownHeader`nNo Issues Found"}
+            If (-not $markdown){ 
+              Write-Warning "MARKDOWN STRING IS:`n$markdown"
+              return "$markdownHeader`nNo Issues Found"
+            }
             return "$markdownHeader`n$markdown"
         }
-        (Get-Content "./${{ inputs.working_dir}}-${{ inputs.type }}.json"  | ConvertTo-Markdown)  >> reportssummary.md
-        cat reportssummary.md >> $env:GITHUB_STEP_SUMMARY
+        (Get-Content "./${{ inputs.working_dir}}-${{ inputs.type }}.json"  | ConvertTo-Markdown)  >> $env:GITHUB_STEP_SUMMARY

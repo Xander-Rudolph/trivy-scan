@@ -105,6 +105,6 @@ runs:
         $outputFile = Get-Item "${{ inputs.working_dir}}-${{ inputs.type }}.json"
         $content = Get-Content $outputFile
         Write-Warning "Content:`n$($content)"
-        $mdcontent = $content | ConvertTo-Markdown
+        $mdcontent = ConvertTo-Markdown -InputObject $content
         Write-Warning "Content:`n$($mdcontent)"
         echo $mdcontent >> $env:GITHUB_STEP_SUMMARY

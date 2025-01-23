@@ -8,7 +8,7 @@ inputs:
   working_dir:
     description: "Working path for scan"
     required: false
-    default: .
+    default: ${{ github.workspace }}
   severity:
     description: "Severity to flag on"
     required: false

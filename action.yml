@@ -102,4 +102,5 @@ runs:
             }
             return "$markdownHeader`n$markdown"
         }
-        (Get-Content "${{ inputs.working_dir}}-${{ inputs.type }}.json"  | ConvertTo-Markdown)  >> $env:GITHUB_STEP_SUMMARY
+        $content = Get-Content "${{ inputs.working_dir}}-${{ inputs.type }}.json" | ConvertTo-Markdown
+        echo $content >> $env:GITHUB_STEP_SUMMARY

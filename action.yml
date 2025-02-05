@@ -40,13 +40,14 @@ runs:
       shell: bash
       id: scan
       run: | 
+        curl -sO https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
         trivy ${{ inputs.type }} \
           --scanners vuln,misconfig,secret,license \
           --format template \
-          --template "@${{ github.action_path }}/templates/${{ inputs.output_format }}.tpl" \
-          --output "${{ inputs.working_dir}}-report" \
-          --severity ${{ inputs.severity}} \
-          ${{ inputs.working_dir}}
+          --template "./html.tpl" \
+          --output "${{ inputs.working_dir }}-report.html" \
+          --severity "${{ inputs.severity }}" \
+          "${{ inputs.working_dir }}"
 
         #TODO: should probably change the file extension by detecting the format here... some day
         

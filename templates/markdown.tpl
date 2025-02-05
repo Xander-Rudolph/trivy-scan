@@ -3,20 +3,22 @@
 ## Summary
 {{- if . }}
   {{- range . }}
-    {{- if (eq .Type "cargo") }}
-## Rust Dependencies ({{.Type}})
+    {{- if eq .Type "cargo" }}
+## Rust Dependencies ({{ .Type }})
     {{- else }}
-## {{.Type}} 
-      {{- if has . "Vulnerabilities" }}
+## {{ .Type }}
+      {{- if .Vulnerabilities }}
 <details><summary>Click to expand</summary>
+
 | Package | Vulnerability ID | Severity | Title | Fixed Version |
-|---------|-----------------|-----------|-------|---------------|
+|---------|------------------|----------|-------|--------------|
         {{- range .Vulnerabilities }}
-| `{{ .PkgName }}` | [{{ .VulnerabilityID }}]({{ .PrimaryURL }}) | {{ .Severity }} | {{ .Title }} | {{ if .FixedVersion}}`{{ .FixedVersion }}`{{ else }}Not Fixed{{ end }} |
-</details>
+| `{{ .PkgName }}` | [{{ .VulnerabilityID }}]({{ .PrimaryURL }}) | {{ .Severity }} | {{ .Title }} | {{ if .FixedVersion }}`{{ .FixedVersion }}`{{ else }}Not Fixed{{ end }} |
         {{- end }}
-      {{- end }}
+</details>
+      {{- else }}
 No vulnerabilities found.
+      {{- end }}
     {{- end }}
 
     {{- if .Secrets }}

@@ -42,7 +42,7 @@ runs:
       id: scan
       run: | 
         # curl -s -o "${{ github.action_path }}/templates/${{ inputs.output_format }}.tpl" https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/${{ inputs.output_format }}.tpl
-        curl -s -o "${{ github.action_path }}/templates/${{ inputs.output_format }}.tpl" https://raw.githubusercontent.com/stepcheunghk/trivy-templates/refs/heads/main/templates/${{ inputs.output_format }}.tpl
+        # curl -s -o "${{ github.action_path }}/templates/${{ inputs.output_format }}.tpl" https://raw.githubusercontent.com/stepcheunghk/trivy-templates/refs/heads/main/templates/${{ inputs.output_format }}.tpl
         
         trivy ${{ inputs.type }} \
           --scanners vuln,misconfig,secret,license \

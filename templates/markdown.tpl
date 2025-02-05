@@ -1,4 +1,4 @@
-# Trivy Report {{ (time.Now).UTC.Format "YYYY-MM-DD HH:mm" }}
+# Trivy Report
 
 ## Summary
 {{- if . }}

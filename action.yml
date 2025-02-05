@@ -20,7 +20,7 @@ inputs:
   output_format:
     description: "Type of output file to return"
     required: false
-    default: markdown
+    default: html
 
 runs:
   using: composite
@@ -36,15 +36,16 @@ runs:
         sudo apt-get update
         sudo apt-get install trivy
 
+    # --template "@${{ github.action_path }}/templates/${{ inputs.output_format }}.tpl" \
     - name: Run Trivy scan on ${{ inputs.working_dir }}
       shell: bash
       id: scan
       run: | 
-        curl -sO https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
+        curl -s -o "${{ github.action_path }}/templates/${{ inputs.output_format }}.tpl" https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/${{ inputs.output_format }}.tpl
         trivy ${{ inputs.type }} \
           --scanners vuln,misconfig,secret,license \
           --format template \
-          --template "./html.tpl" \
+          --template "@${{ github.action_path }}/templates/${{ inputs.output_format }}.tpl" \
           --output "${{ inputs.working_dir }}-report.html" \
           --severity "${{ inputs.severity }}" \
           "${{ inputs.working_dir }}"
@@ -52,4 +53,4 @@ runs:
         #TODO: should probably change the file extension by detecting the format here... some day
         
         # Add the report to the GitHub step summary
-        cat "${{ inputs.working_dir}}-report" >> $GITHUB_STEP_SUMMARY
+        cat "${{ inputs.working_dir}}-report.html" >> $GITHUB_STEP_SUMMARY

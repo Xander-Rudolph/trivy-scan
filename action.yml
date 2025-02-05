@@ -17,6 +17,10 @@ inputs:
     description: "Type of scan to run"
     required: false
     default: fs
+  output_format:
+    description: "Type of output file to return"
+    required: false
+    default: markdown
 
 runs:
   using: composite
@@ -39,10 +43,12 @@ runs:
         trivy ${{ inputs.type }} \
           --scanners vuln,misconfig,secret,license \
           --format template \
-          --template "@templates/trivy-template.tpl" \
-          --output "${{ inputs.working_dir}}-report.md" \
+          --template "@templates/${{ inputs.output_format }}.tpl" \
+          --output "${{ inputs.working_dir}}-report" \
           --severity ${{ inputs.severity}} \
           ${{ inputs.working_dir}}
+
+        #TODO: should probably change the file extension by detecting the format here... some day
         
         # Add the report to the GitHub step summary
-        cat "${{ inputs.working_dir}}-report.md" >> $GITHUB_STEP_SUMMARY
+        cat "${{ inputs.working_dir}}-report" >> $GITHUB_STEP_SUMMARY

@@ -1,3 +1,5 @@
+{{- if . }}
+{{- range . }}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,7 +70,7 @@
                     <td>{{ .VulnerabilityID }}</td>
                     <td>{{ .PkgName }}</td>
                     <td>{{ .Severity }}</td>
-                    <td>{{ .Description }}</td>
+                    <td><details><summary>Click to expand</summary>{{ .Description }}</details></td>
                 </tr>
                 {{ end }}
             </tbody>
@@ -151,3 +153,4 @@
     {{ end }}
 </body>
 </html>
+{{- end }}

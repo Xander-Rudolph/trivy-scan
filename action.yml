@@ -43,7 +43,7 @@ runs:
         trivy ${{ inputs.type }} \
           --scanners vuln,misconfig,secret,license \
           --format template \
-          --template "@templates/${{ inputs.output_format }}.tpl" \
+          --template "@${{ inputs.output_format }}.tpl" \
           --output "${{ inputs.working_dir}}-report" \
           --severity ${{ inputs.severity}} \
           ${{ inputs.working_dir}}
